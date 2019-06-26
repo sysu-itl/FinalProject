@@ -17,7 +17,28 @@ using namespace std;
 
 class BlockCreator {
 public:
+
 	static BlockCreator* getInstance();
+
+	Sprite * createBlock(int mode, Vec2 & position, Size & size);
+
+	Sprite * getBlock(int mode, Vec2 pos, Size size);
+
+	void setNextBlock(int mode);
+
+	void removeBlocksIfOut();
+
+	int getSize() { return blockList.size(); }
+
+	void stopBlock();
+
+	void clearBlock();
+
+	std::list<Sprite*> getBlockList();
+
+	void speedUp(double multi);
+
+	Sprite* changeBlockStyle(int mode, Sprite* block, Vec2& position, Size& size);
 
 private:
 	BlockCreator();

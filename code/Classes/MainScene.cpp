@@ -351,3 +351,283 @@ void MainScene::updateMap(float dt)
 	propsFactory::getInstance()->removeIfOut();
 	BlockCreator::getInstance()->removeBlocksIfOut();
 }
+
+void MainScene::addListener() 
+{
+	auto keyboardListener = EventListenerKeyboard::create();
+	keyboardListener->onKeyPressed = CC_CALLBACK_2(MainScene::onKeyPressed, this);
+	keyboardListener->onKeyReleased = CC_CALLBACK_2(MainScene::onKeyReleased, this);
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(keyboardListener, this);
+
+
+	auto contactListener = EventListenerPhysicsContact::create();
+	contactListener->onContactBegin = CC_CALLBACK_1(MainScene::onContactBegin, this);
+	contactListener->onContactSeparate = CC_CALLBACK_1(MainScene::onContactEnd, this);
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
+}
+
+void MainScene::removeListener() 
+{
+	_eventDispatcher->removeAllEventListeners();
+}
+
+void MainScene::explosion(Vec2 pos, float radius) 
+{
+	auto explosion = Sprite::create();
+	this->addChild(explosion);
+	explosion->setPosition(pos);
+	explosion->setAnchorPoint(Vec2(0.5, 0.5));
+	explosion->setTag(ExplosionTag);
+	auto explosionBody = PhysicsBody::createCircle(radius, PhysicsMaterial(100.0f, 0.0f, 0.0f));
+	explosionBody->setCategoryBitmask(0xFFFFFFFF);
+	explosionBody->setCollisionBitmask(0x0);
+	explosionBody->setContactTestBitmask(0xFFFFFFFF);
+	explosionBody->setDynamic(false);
+	explosion->setPhysicsBody(explosionBody);
+}
+
+bool MainScene::onContactBegin(PhysicsContact & contact) 
+{
+	auto node1 = contact.getShapeA()->getBody()->getNode(), 
+		node2 = contact.getShapeB()->getBody()->getNode();
+	if (node1 == nullptr || node2 == nullptr) {
+		return false;
+	}
+	/*
+	* player 1
+	* block 2
+	* gold 100
+	* shoe 101
+	* medicine 103
+	*/
+	auto Tag1 = node1->getTag(), 
+		Tag2 = node2->getTag();
+
+	if (pairMatch(Tag1, Tag2, ChickenTag, ExplosionTag)) {
+		if (Tag1 == 1) {
+			node1->removeFromParentAndCleanup(true);
+		}
+		else {
+			node2->removeFromParentAndCleanup(true);
+		}
+	}
+
+	// player, block
+	if (pairMatch(Tag1, Tag2, ChickenTag, BlockTag)) {
+		int flag = 0;
+	
+		if (Tag1 == 1) {
+			if (node1->getPosition().y >= node2->getPosition().y) {
+				flag = 1;
+			}
+		}
+		else {
+			if (node2->getPosition().y >= node1->getPosition().y) {
+				flag = 1;
+			}
+		}
+
+		canJump = flag == 1? 0 : canJump;
+	}
+
+	// player, gold
+	if (pairMatch(Tag1, Tag2, ChickenTag, GoldTag)) {
+
+		if (Tag1 == 1) {
+			propsFactory::getInstance()->removeProps((Sprite*)node2);
+			node2->removeFromParentAndCleanup(true);
+		}
+		else {
+			propsFactory::getInstance()->removeProps((Sprite*)node1);
+			node1->removeFromParentAndCleanup(true);
+		}
+		contactGold();
+		return false;
+	}
+	// player, shoe
+	if (pairMatch(Tag1, Tag2, ChickenTag, ShoeTag)) {
+		if (Tag1 == 1) {
+			propsFactory::getInstance()->removeProps((Sprite*)node2);
+			node2->removeFromParentAndCleanup(true);
+		}
+		else {
+			propsFactory::getInstance()->removeProps((Sprite*)node1);
+			node1->removeFromParentAndCleanup(true);
+		}
+		contactShoe();
+		scheduleOnce(schedule_selector(MainScene::resetShoePosibilityRange), 15.0f);
+		return false;
+	}
+	// player, medicine
+	
+	if (pairMatch(Tag1, Tag2, ChickenTag, MedicineTag)) {
+		if (Tag1 == 1) {
+			propsFactory::getInstance()->removeProps((Sprite*)node2);
+			node2->removeFromParentAndCleanup(true);
+		}
+		else {
+			propsFactory::getInstance()->removeProps((Sprite*)node1);
+			node1->removeFromParentAndCleanup(true);
+		}
+		contactMedicine();
+		scheduleOnce(schedule_selector(MainScene::resetMedicinePosibilityRange), 15.0f);
+		return false;
+	}
+	else {
+		return true;
+	}
+
+	
+}
+
+bool MainScene::onContactEnd(PhysicsContact & contact) 
+{
+	auto node1 = contact.getShapeA()->getBody()->getNode(), 
+		node2 = contact.getShapeB()->getBody()->getNode();
+	if (node1 == nullptr || node2 == nullptr) {
+		return false;
+	}
+	/*
+	* player 1
+	* block 2
+	* gold 100
+	* shoe 101
+	* rocket 102
+	* medicine 103
+	*/
+	auto Tag1 = node1->getTag(), Tag2 = node2->getTag();
+
+	// player, block
+	if (pairMatch(Tag1, Tag2, ChickenTag, BlockTag)) {
+
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+bool MainScene::pairMatch(int a1, int a2, int b1, int b2) 
+{
+	return ((a1 == b1) && (a2 == b2)) 
+				|| ((a1 == b2) && (a2 == b1));
+}
+
+//
+void MainScene::onKeyPressed(EventKeyboard::KeyCode code, Event* event) 
+{
+	double dx = player->getPhysicsBody()->getVelocity().x;
+	double dy = 0;
+	double disX = 300, disY = 480;
+	switch (code) {
+		case  cocos2d::EventKeyboard::KeyCode::KEY_W:
+		case cocos2d::EventKeyboard::KeyCode::KEY_SPACE:
+		case cocos2d::EventKeyboard::KeyCode::KEY_UP_ARROW:
+			dy = disY;
+			canJump++;
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_0:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(0);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_1:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(1);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_2:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(2);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_3:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(3);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_4:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(4);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_5:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(5);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_6:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(6);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_7:
+			if (DEBUG) {
+				Test::getInstance()->TestMusic(7);
+			}
+			break;
+		case cocos2d::EventKeyboard::KeyCode::KEY_8:
+			if (DEBUG) {
+				Test::getInstance()->TestDatabase();
+			}
+			break;
+		default:
+			break;
+	}
+	
+	if ( canJump <= jumpCount) {
+		player->getPhysicsBody()->setVelocity(Vec2(dx, dy));
+		if (!DEBUG) {
+			Music::getInstance()->playMusic(1);
+		}
+	}
+}
+
+// 释放按键
+void MainScene::onKeyReleased(EventKeyboard::KeyCode code, Event* event) 
+{
+	double dy = player->getPhysicsBody()->getVelocity().y;
+	
+	switch (code) {
+	case cocos2d::EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+	case cocos2d::EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+		break;
+	default:
+		break;
+	}
+}
+
+// 更新显示
+void MainScene::updateScoreLabel() 
+{
+	char str[20];
+	sprintf(str, "Score: %d", Money);
+	currentScore->setString(str);
+}
+
+void MainScene::updateHighScoreLabel() 
+{
+	char str[20];
+	sprintf(str, "High Score: %d", highScore);
+	MostHigh->setString(str);
+}
+
+int MainScene::getCurrentScore() 
+{
+	return Money;
+}
+
+void MainScene::speedUp(float dt) 
+{
+	if (!isStop) {
+		difficulty += difficulty >= 10 ? 0 : 1;
+		double multi = 1.1;
+		changeSpeed(multi);
+	}
+}
+
+void MainScene::changeSpeed(double multi) 
+{
+	BlockCreator::getInstance()->speedUp(multi);
+	propsFactory::getInstance()->speedUp(multi);
+}

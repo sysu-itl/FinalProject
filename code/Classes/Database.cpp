@@ -19,6 +19,10 @@ Database::~Database() {
 	db = NULL;
 }
 
+void Database::setNewRecord(bool i) {
+	this->is_new_record = i;
+}
+
 void Database::createDatabase() {
 	std::string path = FileUtils::getInstance()->getWritablePath() + "playerInfo.db";
 	int result = sqlite3_open(path.c_str(), &db);
@@ -33,7 +37,7 @@ void Database::createDatabase() {
 		CCLOG("error1: %d",result);
 	}
 
-	sql = "insert into record(player, life, jump, curScore, high) values (0,1,1,0,0)";
+	sql = "insert into record(player, life, jump, curScore, high) values (0,1,1,0,0);";
 	result = sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
 	is_new_record = result == SQLITE_OK ? true : false;
 }
@@ -43,8 +47,8 @@ int Database::getPlayerLife(int player) {
 	if (!is_new_record) {
 		char** re;
 		int row, col;
-		char sql[50];
-		sprintf(sql, "select life from record where player = %d", player);
+		char sql[100] = { 0 };
+		sprintf(sql, "select life from record where player = %d;", player);
 		sqlite3_get_table(db, sql, &re, &row, &col, NULL);
 		life = atoi(re[1]);
 		sqlite3_free_table(re);
@@ -60,8 +64,8 @@ int Database::getPlayerJumpCount(int player) {
 	if (!is_new_record) {
 		char** re;
 		int row, col;
-		char sql[50];
-		sprintf(sql, "select jump from record where player = %d", player);
+		char sql[100] = { 0 };
+		sprintf(sql, "select jump from record where player = %d;", player);
 		sqlite3_get_table(db, sql, &re, &row, &col, NULL);
 		jumpCount = atoi(re[1]);
 		sqlite3_free_table(re);
@@ -77,8 +81,8 @@ int Database::getPlayerHighScore(int player) {
 	if (!is_new_record) {
 		char** re;
 		int row, col;
-		char sql[50];
-		sprintf(sql, "select high from record where player = %d", player);
+		char sql[100] = { 0 };
+		sprintf(sql, "select high from record where player = %d;", player);
 		sqlite3_get_table(db, sql, &re, &row, &col, NULL);
 		highScore = atoi(re[1]);
 		sqlite3_free_table(re);
@@ -94,8 +98,8 @@ int Database::getPlayerCurrentScore(int player) {
 	if (!is_new_record) {
 		char** re;
 		int row, col;
-		char sql[50];
-		sprintf(sql, "select curScore from record where player = %d", player);
+		char sql[100] = { 0 };
+		sprintf(sql, "select curScore from record where player = %d;", player);
 		sqlite3_get_table(db, sql, &re, &row, &col, NULL);
 		curScore = atoi(re[1]);
 		sqlite3_free_table(re);
@@ -108,8 +112,8 @@ int Database::getPlayerCurrentScore(int player) {
 
 void Database::setPlayerLife(int player, int life) {
 	if (!is_new_record) {
-		char sql[100];
-		sprintf(sql, "update record set life = %d where player = %d", life, player);
+		char sql[100] = { 0 };
+		sprintf(sql, "update record set life = %d where player = %d;", life, player);
 		int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
 		if (result == SQLITE_OK) {
 			CCLOG("set life ok!");
@@ -125,8 +129,8 @@ void Database::setPlayerLife(int player, int life) {
 
 void Database::setPlayerJumpCount(int player, int jumpCount) {
 	if (!is_new_record) {
-		char sql[100];
-		sprintf(sql, "update record set jump = %d where player = %d", jumpCount, player);
+		char sql[100] = { 0 };
+		sprintf(sql, "update record set jump = %d where player = %d;", jumpCount, player);
 		int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
 		if (result == SQLITE_OK) {
 			CCLOG("set jump count ok!");
@@ -142,8 +146,8 @@ void Database::setPlayerJumpCount(int player, int jumpCount) {
 
 void Database::setPlayerHighScore(int player, int high) {
 	if (!is_new_record) {
-		char sql[100];
-		sprintf(sql, "update record set high = %d where player = %d", high, player);
+		char sql[100] = { 0 };
+		sprintf(sql, "update record set high = %d where player = %d;", high, player);
 		int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
 		if (result == SQLITE_OK) {
 			CCLOG("set high score ok!");
@@ -159,7 +163,7 @@ void Database::setPlayerHighScore(int player, int high) {
 
 void Database::setPlayerCurrentScore(int player, int score) {
 	if (!is_new_record) {
-		char sql[100];
+		char sql[100] = { 0 };
 		sprintf(sql, "update record set curScore = %d where player = %d", score, player);
 		int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
 		if (result == SQLITE_OK) {
@@ -176,7 +180,7 @@ void Database::setPlayerCurrentScore(int player, int score) {
 
 void Database::resetPlayer(int player) {
 	if (!is_new_record) {
-		char sql[100];
+		char sql[100] = { 0 };
 		sprintf(sql, "update record set life = 1, jump = 1, curScore = 0 where player = %d", player);
 		int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
 		if (result == SQLITE_OK) {
@@ -192,7 +196,7 @@ void Database::resetPlayer(int player) {
 }
 
 void Database::addRank(int player, int score){
-	char sql[100];
+	char sql[100] = { 0 };
 	sprintf(sql, "insert into rank(player, score) values (%d, %d);", player, score);
 	int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
 	if (result == SQLITE_OK) {
@@ -204,7 +208,7 @@ void Database::addRank(int player, int score){
 }
 
 void Database::refreshRank(){
-	char sql[200];
+	char sql[200] = { 0 };
 	sprintf(sql, "delete from rank where score not in( select score from rank order by score DESC limit 0,10;);");
 	int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
 	if (result == SQLITE_OK) {
@@ -231,12 +235,6 @@ std::vector<std::vector<string>> Database::getRank(){
 			for (int j = 0; j < col; j++) {
 				std::string d = re[index];
 				t.push_back(d);
-				/*
-				strOut += re[j];
-				strOut += ":";
-				strOut += re[index];
-				strOut += "\n";
-				*/
 				++index;
 			}
 			result.push_back(t);

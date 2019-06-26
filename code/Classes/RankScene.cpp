@@ -16,53 +16,42 @@ static void problemLoading(const char* filename)
 // on "init" you need to initialize your instance
 bool RankScene::init()
 {
-	//////////////////////////////
-	// 1. super init first
+
 	if (!Scene::init())
 	{
 		return false;
 	}
-
+	//获得中文词典
 	Dictionary* dic = Dictionary::createWithContentsOfFile("Chinese.xml");
 
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
-
-	/*
-	TMXTiledMap* tmx = TMXTiledMap::create("map.tmx");
-	tmx->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-	tmx->setAnchorPoint(Vec2(0.5, 0.5));
-	tmx->setScale(Director::getInstance()->getContentScaleFactor());
-	this->addChild(tmx, -1);
-	*/
-
+	//总的背景
 	Sprite* background = Sprite::create("background.png");
 	background->setContentSize(visibleSize);
 	background->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(background, -1);
-
+	//排行榜背景
 	Sprite* backphoto = Sprite::create("hint.png");
 	backphoto->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(backphoto, 1);
+	//生成返回按钮
+	String* backText = (String*)dic->valueForKey("back");
+	std::string backStr = backText->getCString();
+	auto backTTF = LabelTTF::create(backStr, "Arial", 40);
+	auto backMenuItem = MenuItemLabel::create(backTTF, CC_CALLBACK_1(RankScene::backButtonCallback, this));
+	backMenuItem->setPosition(Vec2(visibleSize.width * 3 / 4, visibleSize.height * 1 / 4 - 50));
+	backMenuItem->setColor(Color3B(147, 68, 0));
+	auto backMenu = Menu::create(backMenuItem, NULL);
+	backMenu->setPosition(Vec2::ZERO);
+	this->addChild(backMenu, 1);
 
-
-
-	String* strchinese1 = (String*)dic->valueForKey("back");
-	std::string str1 = strchinese1->getCString();
-	auto ttf_1 = LabelTTF::create(str1, "Arial", 40);
-	auto menuItem1 = MenuItemLabel::create(ttf_1, CC_CALLBACK_1(RankScene::backButtonCallback, this));
-	menuItem1->setPosition(Vec2(visibleSize.width * 3 / 4, visibleSize.height * 1 / 4 - 50));
-	menuItem1->setColor(Color3B(147, 68, 0));
-	auto menu1 = Menu::create(menuItem1, NULL);
-	menu1->setPosition(Vec2::ZERO);
-	this->addChild(menu1, 1);
-
-
+	//标题的label
 	Vec2 titlePosition(visibleSize.width / 2, visibleSize.height - 150);
 	String* titleText = (String*)dic->valueForKey("rank");
 	std::string titleStr = titleText->getCString();
 	createLabel(titlePosition, titleStr, 40);
-
+	//排行榜内容的位置
 	Vec2 rankPosition(visibleSize.width / 2 - 100, visibleSize.height - 200);
 	std::vector<std::vector<std::string>> data = Database::getInstance()->getRank();
 
@@ -80,7 +69,7 @@ bool RankScene::init()
 	
 	return true;
 }
-
+//创建一般的label
 Label * RankScene::createLabel(Vec2 labelPos, std::string text, int fontSize, Color3B textColor)
 {
 	auto label = Label::createWithSystemFont(text, "Arial", fontSize);

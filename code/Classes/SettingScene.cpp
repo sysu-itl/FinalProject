@@ -6,7 +6,7 @@ Scene* SettingScene::createScene()
 {
 	return SettingScene::create();
 }
-
+//创建设置文件
 void SettingScene::createSettingFileIfNotExit()
 {
 	
@@ -14,21 +14,19 @@ void SettingScene::createSettingFileIfNotExit()
 		Dictionary::createWithContentsOfFile("setting.xml")->writeToFile(settingPath.c_str() ) ;
 	}
 }
-
+//返回设置文件字典
 Dictionary* SettingScene::getSettingDict()
 {
 	createSettingFileIfNotExit();
 	return Dictionary::createWithContentsOfFile(settingPath.c_str() );
 }
 
-
-// Print useful error message instead of segfaulting when files are not there.
 static void problemLoading(const char* filename)
 {
 	printf("Error while loading: %s\n", filename);
 }
 
-// on "init" you need to initialize your instance
+
 bool SettingScene::init()
 {
 	//////////////////////////////
@@ -40,32 +38,20 @@ bool SettingScene::init()
 	}
 	
 	auto visibleSize = Director::getInstance()->getVisibleSize();
-
+	//创建设置文件的字典
 	Dictionary* settingDic = getSettingDict();
 	Dictionary* textDic = Dictionary::createWithContentsOfFile("Chinese.xml");
 	oldMusicVolumnPercentage = settingDic->valueForKey("MusicVolumn")->intValue() ;
 	oldEffectVolumnPercentage = settingDic->valueForKey("EffectVolumn")->intValue();
-
-	
-	/*
-	TMXTiledMap* tmx = TMXTiledMap::create("map.tmx");
-	tmx->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-	tmx->setAnchorPoint(Vec2(0.5, 0.5));
-	tmx->setScale(Director::getInstance()->getContentScaleFactor());
-	this->addChild(tmx, -1);
-	*/
-
+	//创建背景图片
 	Sprite* background = Sprite::create("background.png");
 	background->setContentSize(visibleSize);
 	background->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(background, -1);
-
-
+	//创建设置界面的背景板
 	Sprite* backPic = Sprite::create("settingBackground.png");
 	backPic->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(backPic, 0);
-
-
 	//创建一个滑块条
 	auto MusicVolumnSliderPos = Vec2(visibleSize.width / 2, visibleSize.height / 2 + 200);
 	MusicVolumnSlider = createSlider(MusicVolumnSliderPos, oldMusicVolumnPercentage);
@@ -117,16 +103,9 @@ bool SettingScene::init()
 	auto menu2 = Menu::create(menuItem2, NULL);
 	menu2->setPosition(Vec2::ZERO);
 	this->addChild(menu2, 1);
-
-	/*
-	Dictionary* dic = Dictionary::createWithContentsOfFile("setting.xml");
-	CCDouble* newVolumn = CCDouble::create(1.0);
-	dic->setObject(newVolumn, "volumn");
-	dic->writeToFile("setting.xml");
-	*/
 	return true;
 }
-
+//创建滑动条
 ui::Slider* SettingScene::createSlider(Vec2 sliderPos, int oriPercentage)
 {
 	auto slider = ui::Slider::create();
@@ -139,7 +118,7 @@ ui::Slider* SettingScene::createSlider(Vec2 sliderPos, int oriPercentage)
 	this->addChild(slider,2);
 	return slider;
 }
-
+//创建标签
 Label* SettingScene::createLabel(Vec2 labelPos, std::string text, int fontSize, Color3B textColor)
 {
 	auto label = Label::createWithSystemFont(text, "Arial", fontSize);
@@ -148,7 +127,7 @@ Label* SettingScene::createLabel(Vec2 labelPos, std::string text, int fontSize, 
 	this->addChild(label, 2);
 	return label;
 }
-
+//滑动音乐滑动条的事件
 void SettingScene::MusicVolumnSliderEvent(Ref * pSender, ui::Slider::EventType type)
 {
 	char volumnStr[10];
@@ -157,7 +136,7 @@ void SettingScene::MusicVolumnSliderEvent(Ref * pSender, ui::Slider::EventType t
 	MusicVolumnText->setString(string(volumnStr) );
 }
 
-
+//滑动音效滑动条的事件
 void SettingScene::EffectVolumnSliderEvent(Ref * pSender, ui::Slider::EventType type)
 {
 	char volumnStr[10];
@@ -165,14 +144,13 @@ void SettingScene::EffectVolumnSliderEvent(Ref * pSender, ui::Slider::EventType 
 	sprintf(volumnStr, "%d%%", showVolumnPercentage);
 	EffectVolumnText->setString(string(volumnStr) );
 }
-
+//返回按钮的事件
 void SettingScene::backButtonCallback(Ref* pSender)
 {
 	auto scene = MenuScene::createScene();
 	Director::getInstance()->replaceScene(scene);
 }
-
-
+//保存按钮的事件
 void SettingScene::saveButtonCallback(Ref* pSender)
 {
 	Dictionary* settingDic= Dictionary::createWithContentsOfFile(settingPath.c_str() );
@@ -182,6 +160,6 @@ void SettingScene::saveButtonCallback(Ref* pSender)
 	settingDic->setObject(newEffectVolumn, "EffectVolumn");
 	
 	settingDic->writeToFile(settingPath.c_str());
-	//MusicVolumnText->setString(settingPath.c_str() );
+
 }
 

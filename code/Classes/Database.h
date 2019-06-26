@@ -25,7 +25,7 @@ public:
 	void addRank(int player, int score);
 	void refreshRank();
 	std::vector<std::vector<string>> getRank();
-
+	void setNewRecord(bool i);
 private:
 	static Database* instance;
 	sqlite3* db;

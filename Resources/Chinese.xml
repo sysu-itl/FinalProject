@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+    <dict>
+        <key>restartTitle</key>
+        <string>游戏结束</string>
+        <key>start</key>
+        <string>开始游戏</string>
+        <key>setting</key>
+        <string>游戏设置</string>
+        <key>exit</key>
+        <string>退出游戏</string>
+
+        <key>saveSetting</key>
+        <string>保存设置</string>
+        <key>effectText</key>
+        <string>音效</string>
+        <key>musicText</key>
+        <string>音乐</string>
+
+        <key>rule</key>
+        <string>游戏规则</string>
+        <key>rank</key>
+        <string>排行榜</string>
+        <key>back</key>
+        <string>返回</string>
+        
+        <key>shoes</key>
+        <string>拾取可获得连跳技能</string>
+        <key>money</key>
+        <string>拾取可获得大量分数</string>
+        <key>medicine</key>
+        <string>拾取减缓速度</string>
+        <key>time</key>
+        <string>连跳技能的剩余持续时间</string>
+        <key>miaoshu</key>
+        <string>玩法：按空格键或者“↑”或者“w”实现跳跃</string>
+
+        <key>backMenu</key>
+        <string>返回主菜单</string>
+        <key>restart</key>
+        <string>重新开始</string>
+    </dict>
+</plist>

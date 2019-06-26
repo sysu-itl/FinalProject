@@ -3,6 +3,7 @@
 Database* Database::instance = nullptr;
 
 Database* Database::getInstance() {
+	// 单例模式
 	if (instance == nullptr) {
 		instance = new Database();
 	}
@@ -10,33 +11,39 @@ Database* Database::getInstance() {
 }
 
 Database::Database() { 
+	// 初始化数据库
 	db = NULL; 
 	is_new_record = true; 
 };
 
 Database::~Database() { 
+	// 关闭数据库连接
 	sqlite3_close(db); 
 	db = NULL;
 }
 
 void Database::setNewRecord(bool i) {
+	// 设置是否为第一次游戏
 	this->is_new_record = i;
 }
 
 void Database::createDatabase() {
+	// 连接数据库
 	std::string path = FileUtils::getInstance()->getWritablePath() + "playerInfo.db";
 	int result = sqlite3_open(path.c_str(), &db);
+	// 创建record表
 	std::string sql = "create table if not exists record(player int, life int, jump int, curScore int, high int, primary key(player));";
 	result = sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
 	if (result != SQLITE_OK) {
 		CCLOG("error0: %d", result);
 	}
+	// 创建rank表
 	sql = "create table if not exists rank(player int, score int);";
 	result = sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
 	if (result != SQLITE_OK) {
 		CCLOG("error1: %d",result);
 	}
-
+	// 插入游戏玩家初始化信息
 	sql = "insert into record(player, life, jump, curScore, high) values (0,1,1,0,0);";
 	result = sqlite3_exec(db, sql.c_str(), NULL, NULL, NULL);
 	is_new_record = result == SQLITE_OK ? true : false;
@@ -44,6 +51,7 @@ void Database::createDatabase() {
 
 int Database::getPlayerLife(int player) {
 	int life = 1;
+	// 获取玩家当前生命值
 	if (!is_new_record) {
 		char** re;
 		int row, col;
@@ -61,6 +69,7 @@ int Database::getPlayerLife(int player) {
 
 int Database::getPlayerJumpCount(int player) {
 	int jumpCount = 1;
+	// 获取玩家当前可跳跃的次数
 	if (!is_new_record) {
 		char** re;
 		int row, col;
@@ -78,6 +87,7 @@ int Database::getPlayerJumpCount(int player) {
 
 int Database::getPlayerHighScore(int player) {
 	int highScore = 0;
+	// 获取玩家历史最高得分
 	if (!is_new_record) {
 		char** re;
 		int row, col;
@@ -95,6 +105,7 @@ int Database::getPlayerHighScore(int player) {
 
 int Database::getPlayerCurrentScore(int player) {
 	int curScore = 0;
+	// 获取玩家当前得分
 	if (!is_new_record) {
 		char** re;
 		int row, col;
@@ -111,6 +122,7 @@ int Database::getPlayerCurrentScore(int player) {
 }
 
 void Database::setPlayerLife(int player, int life) {
+	// 设置玩家当前生命值
 	if (!is_new_record) {
 		char sql[100] = { 0 };
 		sprintf(sql, "update record set life = %d where player = %d;", life, player);
@@ -128,6 +140,7 @@ void Database::setPlayerLife(int player, int life) {
 }
 
 void Database::setPlayerJumpCount(int player, int jumpCount) {
+	// 设置玩家当前最大跳跃次数
 	if (!is_new_record) {
 		char sql[100] = { 0 };
 		sprintf(sql, "update record set jump = %d where player = %d;", jumpCount, player);
@@ -145,6 +158,7 @@ void Database::setPlayerJumpCount(int player, int jumpCount) {
 }
 
 void Database::setPlayerHighScore(int player, int high) {
+	// 设置玩家历史最高得分
 	if (!is_new_record) {
 		char sql[100] = { 0 };
 		sprintf(sql, "update record set high = %d where player = %d;", high, player);
@@ -162,6 +176,7 @@ void Database::setPlayerHighScore(int player, int high) {
 }
 
 void Database::setPlayerCurrentScore(int player, int score) {
+	// 设置玩家当前得分
 	if (!is_new_record) {
 		char sql[100] = { 0 };
 		sprintf(sql, "update record set curScore = %d where player = %d", score, player);
@@ -179,6 +194,7 @@ void Database::setPlayerCurrentScore(int player, int score) {
 }
 
 void Database::resetPlayer(int player) {
+	// 重置玩家信息
 	if (!is_new_record) {
 		char sql[100] = { 0 };
 		sprintf(sql, "update record set life = 1, jump = 1, curScore = 0 where player = %d", player);
@@ -196,6 +212,7 @@ void Database::resetPlayer(int player) {
 }
 
 void Database::addRank(int player, int score){
+	// 将玩家的游戏得分添加到排行榜记录
 	char sql[100] = { 0 };
 	sprintf(sql, "insert into rank(player, score) values (%d, %d);", player, score);
 	int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
@@ -208,6 +225,7 @@ void Database::addRank(int player, int score){
 }
 
 void Database::refreshRank(){
+	// 更新排行榜，只保留前十名
 	char sql[200] = { 0 };
 	sprintf(sql, "delete from rank where score not in( select score from rank order by score DESC limit 0,10;);");
 	int result = sqlite3_exec(db, sql, NULL, NULL, NULL);
@@ -223,9 +241,8 @@ std::vector<std::vector<string>> Database::getRank(){
 	std::vector<std::vector<string>> result;
 	char** re;
 	int row, col;
+	// 获取排行榜的信息
 	std::string sql = "select player, score from rank order by score DESC limit 0,10;";
-
-	//int res = sqlite3_exec(db, sql, loadInfo, NULL, NULL);
 	int res = sqlite3_get_table(db, sql.c_str(), &re, &row, &col, NULL);
 	int index = col;
 	std::string strOut;

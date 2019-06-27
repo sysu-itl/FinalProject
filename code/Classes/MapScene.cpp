@@ -2,6 +2,7 @@
 
 #include "math\MathUtil.h"
 #include "cocos2d.h"
+#include "MenuScene.h"
 
 #include <iostream>
 USING_NS_CC;
@@ -13,9 +14,27 @@ USING_NS_CC;
 //	printf("Depending on how you compiled you might have to add 'Resources/' in front of filenames in HelloWorldScene.cpp\n");
 //}
 
+void MapScene::setPhysicsWorld(PhysicsWorld * world)
+{
+	m_physicWorld = world;
+}
+
 Scene* MapScene::createScene()
 {
-	return MapScene::create();
+	auto scene = Scene::createWithPhysics();
+
+	scene->getPhysicsWorld()->setAutoStep(true);
+
+	// Debug 模式
+	//scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+	auto layer = MapScene::create();
+	//设置物理世界
+	layer->setPhysicsWorld(scene->getPhysicsWorld());
+
+	scene->addChild(layer);
+	scene->getPhysicsWorld()->setGravity(Vec2(0, -980));
+
+	return scene;
 }
 
 // on "init" you need to initialize your instance
@@ -23,7 +42,7 @@ bool MapScene::init()
 {
 	//////////////////////////////
 	// 1. super init first
-	if (!Scene::init())
+	if (!Layer::init())
 	{
 		return false;
 	}
@@ -53,6 +72,13 @@ bool MapScene::init()
 	//添加监听器
 	this->addListener();
 
+	//测试元素
+	testInit();
+
+	//loadMapButtonCallback();
+	//testMenu();
+	
+
 	//temp
 	printLabel = Label::create("test", "Arial", 20);
 	printLabel->setPosition(visibleSize.width - 100, visibleSize.height - 100);
@@ -64,50 +90,63 @@ bool MapScene::init()
 
 void MapScene::drawBackground()
 {
-	Sprite* background = Sprite::create("background.png");
-	background->setContentSize(visibleSize);
+	background = TMXTiledMap::create("map.tmx");
 	background->setPosition(Vec2::ZERO);
 	background->setAnchorPoint(Vec2::ZERO);
+	background->setScale(Director::getInstance()->getContentScaleFactor());
 	this->addChild(background, -1);
 }
 
 void MapScene::addMenu()
 {
 	//开始按钮背景
-	backphoto = Sprite::create("startbutton.png");
+	backphoto = Sprite::create("menuButton.png");
+	backphoto->setTextureRect(Rect(0, 0, 216, 380));
 	backphoto->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 
 	//加载地图按钮
 	loadLabel = Label::create("Load Map", "Arial", 35);
-	loadLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2)+ Vec2(0, 60));
+	loadLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2) + Vec2(0, 160));
 
 	//保存地图按钮
 	saveLabel = Label::create("Save Map", "Arial", 35);
-	saveLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2) + Vec2(0, -50));
+	saveLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2) + Vec2(0, 80));
+
+	//清空地图按钮
+	clearLabel = Label::create("Clear Map", "Arial", 35);
+	clearLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2) + Vec2(0, 0));
+
+	// 测试地图
+	testLabel = Label::create("Test Map", "Arial", 35);
+	testLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2) + Vec2(0, -80));
+
+	// 返回按钮
+	backLabel = Label::create("Back", "Arial", 35);
+	backLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2) + Vec2(0, -150));
+
 
 	this->addChild(backphoto);
 	this->addChild(loadLabel);
 	this->addChild(saveLabel);
+	this->addChild(testLabel);
+	this->addChild(backLabel);
+	this->addChild(clearLabel);
 
 	//隐藏
-	backphoto->setGlobalZOrder(-2);
-	loadLabel->setGlobalZOrder(-2);
-	saveLabel->setGlobalZOrder(-2);
-
-	CCLOG("add backphoto");
+	hideMenu();
 }
 
 void MapScene::drawMapElement()
 {
 
-	float unitWidth = visibleSize.width / (MapClass::mapTexture.size()+1);
+	float unitWidth = visibleSize.width / (MapClass::mapTexture.size() + 1);
 
 	//地图单元绘制
 	for (int i = 0; i < MapClass::mapTexture.size(); i++) {
 		auto sprite = map.createSprite(i);
 
 		sprite->setTextureRect(Rect(0, 0, board * 4, board));
-		sprite->setPosition(origin + localConvert(Size(unitWidth*(MapClass::mapTexture.size() - i), visibleSize.height - sprite->getContentSize().height/2 - board)));
+		sprite->setPosition(origin + localConvert(Size(unitWidth*(MapClass::mapTexture.size() - i), visibleSize.height - sprite->getContentSize().height / 2 - board)));
 		addChild(sprite);
 
 		mapElement.emplace_back(sprite);
@@ -116,6 +155,21 @@ void MapScene::drawMapElement()
 
 void MapScene::print(string str) {
 	printLabel->setString(str.c_str());
+}
+
+void MapScene::backMainPage()
+{
+	auto scene = MenuScene::createScene();
+
+	Director::getInstance()->replaceScene(scene);
+}
+
+void MapScene::clearMap()
+{
+	for (const auto& element : map.mapElement) {
+		this->removeChild(element);
+	}
+	map.clear();
 }
 
 void MapScene::addListener()
@@ -133,28 +187,42 @@ void MapScene::addListener()
 	keyboardListener->onKeyPressed = CC_CALLBACK_2(MapScene::onKeyPressed, this);
 	keyboardListener->onKeyReleased = CC_CALLBACK_2(MapScene::onKeyReleased, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(keyboardListener, this);
+
+	//碰撞监听
+	auto contactListener = EventListenerPhysicsContact::create();
+	contactListener->onContactBegin = CC_CALLBACK_1(MapScene::onContactBegin, this);
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
 }
 
 bool MapScene::onTouchBegan(Touch * touch, Event * event)
 {
 	Point touchLocation = this->convertTouchToNodeSpace(touch);
 
+	// 点击菜单
+	if (state == DRAW_MENU) {
+		if (loadLabel->getBoundingBox().containsPoint(touchLocation)) {
+			loadMapButtonCallback();
+		}
 
-	if (loadLabel->getBoundingBox().containsPoint(touchLocation)) {
-		loadMapButtonCallback();
+		else if (saveLabel->getBoundingBox().containsPoint(touchLocation)) {
+			saveMapButtonCallback();
+		}
+		else if (testLabel->getBoundingBox().containsPoint(touchLocation)) {
+			testMenu();
+		}
+		else if (backLabel->getBoundingBox().containsPoint(touchLocation)) {
+			backMainPage();
+		}
+		else if (clearLabel->getBoundingBox().containsPoint(touchLocation)) {
+			clearMap();
+		}
 		return true;
 	}
-		
-	else if (saveLabel->getBoundingBox().containsPoint(touchLocation)) {
-		saveMapButtonCallback();
-		return true;
-	}
-		
 
 
 	touchLocation = localConvert(touchLocation);
 	print(to_string(touchLocation.x) + "  " + to_string(touchLocation.y));
-	
+
 	if (state == DRAW_NONE || state == DRAW_READY) {
 		if (isInDrawLocal(touchLocation)) {
 
@@ -171,7 +239,7 @@ bool MapScene::onTouchBegan(Touch * touch, Event * event)
 				drawSprite = selElement;
 				print(to_string(selElement->getTag()));
 			}
-			else if (state == DRAW_READY){
+			else if (state == DRAW_READY) {
 				state = DRAW_ACTIVE;
 
 				drawStart = touchLocation;
@@ -179,7 +247,7 @@ bool MapScene::onTouchBegan(Touch * touch, Event * event)
 				drawSprite->setPosition(drawStart);
 				addChild(drawSprite);
 			}
-			
+
 		}
 		else {
 			for (auto const &sprite : mapElement)
@@ -207,7 +275,7 @@ bool MapScene::isInDrawLocal(const Point& loc)
 	return loc.y >= 0 && loc.y <= visibleSize.height - board * 3;
 }
 
-bool MapScene::onTouchMoved(Touch * touch, Event * event)
+void MapScene::onTouchMoved(Touch * touch, Event * event)
 {
 	Point touchLocation = this->convertTouchToNodeSpace(touch);
 	if (state == DRAW_ACTIVE) {
@@ -234,43 +302,49 @@ bool MapScene::onTouchMoved(Touch * touch, Event * event)
 
 		//窗口移动
 		Point winPos = this->getPosition() + translation;
-		
+
 		winPos.x = MIN(winPos.x, 0);
 		winPos.y = this->getPosition().y;
 		translation = winPos - this->getPosition();
-		this->setPosition(winPos);
 
-		//背景移动
-		background->setPosition(-winPos);
-
-		//地图绘制单元移动
-		for (auto& element : mapElement) {
-			element->setPosition(element->getPosition()-translation);
-		}
-
-		//菜单移动
-		backphoto->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2) - winPos);
-		saveLabel->setPosition(saveLabel->getPosition() - translation);
-		loadLabel->setPosition(loadLabel->getPosition() - translation);
-
-		print(to_string(background->getPosition().x) + "  " + to_string(this->getPosition().x));
+		this->moveWin(translation);
 	}
-
-	return true;
 }
 
-bool MapScene::onTouchEnded(Touch * touch, Event * event)
+void MapScene::onTouchEnded(Touch * touch, Event * event)
 {
 	if (state == DRAW_ACTIVE) {
 		if (drawSprite->getContentSize().width != 0 && drawSprite->getContentSize().height != 0) {
+			map.setPhysic(drawSprite);
 			map.push(drawSprite);
 			print("add");
 		}
 		state = DRAW_READY;
-		
+
 	}
-		
-	return true;
+}
+
+void MapScene::moveWin(const Point& translation)
+{
+	this->setPosition(this->getPosition() + translation);
+
+	//背景移动
+	background->setPosition(background->getPosition() - translation);
+
+	//地图绘制单元移动
+	for (auto& element : mapElement) {
+		element->setPosition(element->getPosition() - translation);
+	}
+
+	//菜单移动
+	backphoto->setPosition(backphoto->getPosition() - translation);
+	saveLabel->setPosition(saveLabel->getPosition() - translation);
+	loadLabel->setPosition(loadLabel->getPosition() - translation);
+	testLabel->setPosition(testLabel->getPosition() - translation);
+	backLabel->setPosition(backLabel->getPosition() - translation);
+	clearLabel->setPosition(clearLabel->getPosition() - translation);
+
+	print(to_string(background->getPosition().x) + "  " + to_string(this->getPosition().x));
 }
 
 void MapScene::loadMapButtonCallback()
@@ -287,7 +361,6 @@ void MapScene::loadMapButtonCallback()
 
 void MapScene::saveMapButtonCallback()
 {
-	CCLOG("save");
 	map.saveMap("map1");
 }
 
@@ -295,23 +368,29 @@ void MapScene::onKeyPressed(EventKeyboard::KeyCode code, Event * event)
 {
 	switch (code) {
 
+		//菜单
 	case cocos2d::EventKeyboard::KeyCode::KEY_M:
-		if (backphoto->getGlobalZOrder() != -2) {
-			backphoto->setGlobalZOrder(-2);
-			loadLabel->setGlobalZOrder(-2);
-			saveLabel->setGlobalZOrder(-2);
+		if (state == DRAW_MENU) {
+			hideMenu();
+			if (lastState == DRAW_TEST) {
+				map.move();
+			}
+			state = lastState;
 		}
 		else {
-			backphoto->setGlobalZOrder(2);
-			loadLabel->setGlobalZOrder(3);
-			saveLabel->setGlobalZOrder(3);
-		}
-		
+			showMenu();
+			lastState = state;
+			if (lastState == DRAW_TEST) {
+				map.stop();
+				player->getPhysicsBody()->setVelocity(Vec2::ZERO);
+			}
+			state = DRAW_MENU;
 
+		}
 
 		break;
 
-	//取消选取
+		//取消选取
 	case cocos2d::EventKeyboard::KeyCode::KEY_SPACE:
 		if (state == DRAW_READY) {
 			state = DRAW_MOVE;
@@ -320,7 +399,7 @@ void MapScene::onKeyPressed(EventKeyboard::KeyCode code, Event * event)
 		}
 		break;
 
-	//删除
+		//删除
 	case cocos2d::EventKeyboard::KeyCode::KEY_D:
 		if (drawSprite != NULL) {
 			map.remove(drawSprite);
@@ -329,6 +408,20 @@ void MapScene::onKeyPressed(EventKeyboard::KeyCode code, Event * event)
 		}
 		break;
 
+	case cocos2d::EventKeyboard::KeyCode::KEY_W:
+	case cocos2d::EventKeyboard::KeyCode::KEY_UP_ARROW:
+		if (state == DRAW_TEST) {
+			double dx = player->getPhysicsBody()->getVelocity().x;
+			double dy = 480;
+			canJump++;
+
+			if (canJump <= jumpCount) {
+				player->getPhysicsBody()->setVelocity(Vec2(dx, dy));
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -344,4 +437,168 @@ void MapScene::onKeyReleased(EventKeyboard::KeyCode code, Event * event)
 		}
 		break;
 	}
+}
+
+void MapScene::showMenu()
+{
+	backphoto->setGlobalZOrder(2);
+	loadLabel->setGlobalZOrder(3);
+	saveLabel->setGlobalZOrder(3);
+	testLabel->setGlobalZOrder(3);
+	backLabel->setGlobalZOrder(3);
+	clearLabel->setGlobalZOrder(3);
+}
+
+void MapScene::hideMenu()
+{
+	backphoto->setGlobalZOrder(-2);
+	loadLabel->setGlobalZOrder(-2);
+	saveLabel->setGlobalZOrder(-2);
+	testLabel->setGlobalZOrder(-2);
+	backLabel->setGlobalZOrder(-2);
+	clearLabel->setGlobalZOrder(-2);
+}
+
+void MapScene::testMenu()
+{
+	if (lastState != DRAW_TEST) {
+		state = DRAW_TEST;
+		//player
+		createPlayer();
+		//testlabel
+		testLabel->setString("Test terminal");
+		testReset();
+		map.move();
+	}
+	else {
+		state = DRAW_NONE;
+		//player
+		this->removeChild(player);
+		//testlabel
+		testLabel->setString("Test Map");
+
+		map.reset();
+	}
+	
+	hideMenu();
+}
+
+//测试初始化
+void MapScene::testInit()
+{
+	gameover = false;
+
+	//调度器
+	schedule(schedule_selector(MapScene::update), 0.02f, kRepeatForever, 0.0f);
+	schedule(schedule_selector(MapScene::StopAction), 0.01f, kRepeatForever, 0.0f);
+}
+
+//测试游戏player
+void MapScene::createPlayer()
+{
+	auto texture = Director::getInstance()->getTextureCache()->addImage("run.png");
+	cocos2d::Vector<SpriteFrame*> playerRun;
+	for (int i = 0; i < 6; i++) {
+		auto frame = SpriteFrame::createWithTexture(texture, CC_RECT_PIXELS_TO_POINTS(Rect(i * 128, 0, 120, 120)));
+		playerRun.pushBack(frame);
+	}
+	//创建动画
+	Animation* anim = Animation::createWithSpriteFrames(playerRun, 0.08f);
+	Animate* ani = Animate::create(anim);
+	auto run = RepeatForever::create(ani);
+
+	player = Sprite::create("run0.png");
+	player->setScale(0.3f, 0.3f);
+	player->runAction(run);
+	player->setAnchorPoint(Vec2(0.5, 0.5));
+	auto playerBody = PhysicsBody::createBox(player->getContentSize(), PhysicsMaterial(0.1f, 0.0f, 0.0f));
+	playerBody->setCategoryBitmask(0xFFFFFFFF);
+	playerBody->setCollisionBitmask(0xFFFFFFFF);
+	playerBody->setContactTestBitmask(0xFFFFFFFF);
+	playerBody->setRotationEnable(false);
+	player->setTag(ChickenTag);
+	playerBody->setDynamic(true);
+	player->setPosition(Vec2(50, 230));
+	player->setPhysicsBody(playerBody);
+
+	this->addChild(player, 3);
+}
+
+void MapScene::update(float dt)
+{
+	if (state == DRAW_TEST) {
+		double	xVelocity = visibleSize.width / 2 - player->getPosition().x,
+			yVelocity = player->getPhysicsBody()->getVelocity().y;
+		player->getPhysicsBody()->setVelocity(Vec2(xVelocity, yVelocity));
+	}
+}
+
+//测试停止
+void MapScene::StopAction(float dt)
+{
+	if (state == DRAW_TEST) {
+		if (player->getPosition().x <= 0 || player->getPosition().y <= 0 || gameover == true) {
+			testReset();
+			map.move();
+			gameover = false;
+		}
+	}
+}
+
+//测试重置
+void MapScene::testReset()
+{
+	//player
+	player->setPosition(Vec2(50, 230));
+
+	//map
+	map.reset();
+
+	jumpCount = 1;
+	canJump = 0;
+}
+
+bool MapScene::onContactBegin(PhysicsContact & contact)
+{
+	auto node1 = contact.getShapeA()->getBody()->getNode(),
+		node2 = contact.getShapeB()->getBody()->getNode();
+	if (node1 == nullptr || node2 == nullptr) {
+		return false;
+	}
+
+	auto Tag1 = node1->getTag(),
+		Tag2 = node2->getTag();
+
+	// player, block
+	if (pairMatch(Tag1, Tag2, ChickenTag, BlockTag)) {
+		int flag = 0;
+
+		if (Tag1 == ChickenTag) {
+			if (node1->getPosition().y >= node2->getPosition().y) {
+				flag = 1;
+			}
+		}
+		else {
+			if (node2->getPosition().y >= node1->getPosition().y) {
+				flag = 1;
+			}
+		}
+
+		canJump = flag == 1 ? 0 : canJump;
+		CCLOG("block");
+	}
+
+	// player, trap
+	if (pairMatch(Tag1, Tag2, ChickenTag, trapTag)) {
+		gameover = true;
+		CCLOG("trap");
+	}
+
+	return true;
+}
+
+bool MapScene::pairMatch(int a1, int a2, int b1, int b2)
+{
+	return ((a1 == b1) && (a2 == b2))
+		|| ((a1 == b2) && (a2 == b1));
 }

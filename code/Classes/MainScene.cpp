@@ -392,21 +392,7 @@ void MainScene::removeListener()
 	_eventDispatcher->removeAllEventListeners();
 }
 
-// 设置爆炸效果的球形碰撞盒
-void MainScene::explosion(Vec2 pos, float radius) 
-{
-	auto explosion = Sprite::create();
-	this->addChild(explosion);
-	explosion->setPosition(pos);
-	explosion->setAnchorPoint(Vec2(0.5, 0.5));
-	explosion->setTag(ExplosionTag);
-	auto explosionBody = PhysicsBody::createCircle(radius, PhysicsMaterial(100.0f, 0.0f, 0.0f));
-	explosionBody->setCategoryBitmask(0xFFFFFFFF);
-	explosionBody->setCollisionBitmask(0x0);
-	explosionBody->setContactTestBitmask(0xFFFFFFFF);
-	explosionBody->setDynamic(false);
-	explosion->setPhysicsBody(explosionBody);
-}
+
 
 // 碰撞开始的检测函数
 bool MainScene::onContactBegin(PhysicsContact & contact) 
@@ -425,22 +411,13 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	*/
 	auto Tag1 = node1->getTag(), 
 		Tag2 = node2->getTag();
-	
-	// player, explosion
-	if (pairMatch(Tag1, Tag2, ChickenTag, ExplosionTag)) {
-		if (Tag1 == 1) {
-			node1->removeFromParentAndCleanup(true);
-		}
-		else {
-			node2->removeFromParentAndCleanup(true);
-		}
-	}
+
 
 	// player, block
 	if (pairMatch(Tag1, Tag2, ChickenTag, BlockTag)) {
 		int flag = 0;
 	
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			if (node1->getPosition().y >= node2->getPosition().y) {
 				flag = 1;
 			}
@@ -457,7 +434,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	// player, gold
 	if (pairMatch(Tag1, Tag2, ChickenTag, GoldTag)) {
 
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			propsFactory::getInstance()->removeProps((Sprite*)node2);
 			node2->removeFromParentAndCleanup(true);
 		}
@@ -470,7 +447,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	}
 	// player, shoe
 	if (pairMatch(Tag1, Tag2, ChickenTag, ShoeTag)) {
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			propsFactory::getInstance()->removeProps((Sprite*)node2);
 			node2->removeFromParentAndCleanup(true);
 		}
@@ -485,7 +462,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	
 	// player, medicine
 	if (pairMatch(Tag1, Tag2, ChickenTag, MedicineTag)) {
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			propsFactory::getInstance()->removeProps((Sprite*)node2);
 			node2->removeFromParentAndCleanup(true);
 		}

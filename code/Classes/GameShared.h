@@ -3,6 +3,8 @@
 #ifndef gameShared_H
 #define gameShared_H
 
+#define DEBUG false
+
 const double GameMaxSpeed = 400;
 const double GameMinSpeed = 150;
 const double SpeedChangeRate = 10;

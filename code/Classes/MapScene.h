@@ -55,7 +55,7 @@ private:
 	MapClass map;
 
 	//背景
-	TMXTiledMap* background;
+	Sprite* background;
 
 	//菜单
 	Sprite* backphoto;

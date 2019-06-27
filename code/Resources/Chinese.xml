@@ -3,6 +3,8 @@
     <dict>
         <key>restartTitle</key>
         <string>游戏结束</string>
+        <key>customMap</key>
+        <string>自定义地图</string>
         <key>start</key>
         <string>开始游戏</string>
         <key>setting</key>

@@ -1,4 +1,4 @@
-﻿#include "MapScene.h"
+#include "MapScene.h"
 #include "map.h"
 #include "math\MathUtil.h"
 #include "cocos2d.h"
@@ -90,9 +90,10 @@ bool MapScene::init()
 
 void MapScene::drawBackground()
 {
-	background = Sprite::create("background.png");
-	background->setContentSize(visibleSize);
-	background->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
+	background = TMXTiledMap::create("map.tmx");
+	background->setPosition(Vec2::ZERO);
+	background->setAnchorPoint(Vec2::ZERO);
+	background->setScale(Director::getInstance()->getContentScaleFactor());
 	this->addChild(background, -1);
 }
 
@@ -390,7 +391,6 @@ void MapScene::onKeyPressed(EventKeyboard::KeyCode code, Event * event)
 	case cocos2d::EventKeyboard::KeyCode::KEY_SPACE:
 		if (state == DRAW_READY) {
 			state = DRAW_MOVE;
-
 		}
 		break;
 
@@ -425,7 +425,7 @@ void MapScene::onKeyReleased(EventKeyboard::KeyCode code, Event * event)
 	switch (code) {
 		//取消选取
 	case cocos2d::EventKeyboard::KeyCode::KEY_SPACE:
-		if (selSprite != NULL) {
+		if (selSprite != NULL && state != DRAW_TEST) {
 			state = DRAW_READY;
 		}
 		break;
@@ -458,6 +458,7 @@ void MapScene::testMenu()
 		state = DRAW_TEST;
 		//player
 		createPlayer();
+		moveWin(-this->getPosition());
 		//testlabel
 		testLabel->setString("Test terminal");
 		testReset();

@@ -90,10 +90,9 @@ bool MapScene::init()
 
 void MapScene::drawBackground()
 {
-	background = TMXTiledMap::create("map.tmx");
-	background->setPosition(Vec2::ZERO);
-	background->setAnchorPoint(Vec2::ZERO);
-	background->setScale(Director::getInstance()->getContentScaleFactor());
+	background = Sprite::create("background.png");
+	background->setContentSize(visibleSize);
+	background->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(background, -1);
 }
 

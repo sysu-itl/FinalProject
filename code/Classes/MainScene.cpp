@@ -46,7 +46,7 @@ Scene* MainScene::createScene()
 
 static void problemLoading(const char* filename)
 {
-	
+	// 错误输出
 	printf("Error while loading: %s\n", filename);
 	printf("Depending on how you compiled you might have to add 'Resources/' in front of filenames in MainSceneScene.cpp\n");
 }
@@ -80,7 +80,7 @@ bool MainScene::init()
 	createBackground();
 	//添加监听器
 	addListener();
-
+	//添加轮询定时器
 	schedule(schedule_selector(MainScene::updateMap), 0.02f, kRepeatForever, 0.0f);
 	schedule(schedule_selector(MainScene::StopAction), 0.01f, kRepeatForever, 0.0f);
 	schedule(schedule_selector(MainScene::speedUp), 15.0f, kRepeatForever, 0.0f);
@@ -118,17 +118,21 @@ void MainScene::createRestTimeBar()
 {
 	auto	xPos = player->getPosition().x,
 			yPos = player->getPosition().y + 30;
-	auto sprite = Sprite::create("restTimeBar.png");  //创建剩余条
-	restTimeProgressTimer = ProgressTimer::create(sprite); //创建progress对象
-	restTimeProgressTimer->setType(ProgressTimer::Type::BAR);        //类型：条状
+	//创建剩余条
+	auto sprite = Sprite::create("restTimeBar.png"); 
+	//创建progress对象
+	restTimeProgressTimer = ProgressTimer::create(sprite);
+	//类型：条状
+	restTimeProgressTimer->setType(ProgressTimer::Type::BAR);
 	restTimeProgressTimer->setScale(0.08, 0.12);
 	restTimeProgressTimer->setAnchorPoint(Vec2(0.5, 0.5));
 	restTimeProgressTimer->setPosition(Point(xPos, yPos));
 	restTimeProgressTimer->setMidpoint(Point(0, 0.5));
 	restTimeProgressTimer->setBarChangeRate(Point(1, 0));
 	this->addChild(restTimeProgressTimer);
-	schedule(schedule_selector(MainScene::scheduleRestTime), 0.1f);  //刷新函数，每隔0.1秒
-
+	//刷新函数，每隔0.1秒
+	schedule(schedule_selector(MainScene::scheduleRestTime), 0.1f); 
+	//设置剩余条的物理属性
 	auto restTimeProgressTimerBody = PhysicsBody::createBox(restTimeProgressTimer->getContentSize()
 		, PhysicsMaterial(0.1f, 0.0f, 0.0f));
 	restTimeProgressTimerBody->setCategoryBitmask(0x0);
@@ -138,6 +142,7 @@ void MainScene::createRestTimeBar()
 	restTimeProgressTimerBody->setDynamic(true);
 	restTimeProgressTimer->setPhysicsBody(restTimeProgressTimerBody);
 }
+
 //设置人物和鞋子条的关节
 void MainScene::setJoint()
 {
@@ -146,7 +151,8 @@ void MainScene::setJoint()
 	joint1->setCollisionEnable(false);
 	m_physicWorld->addJoint(joint1);
 }
-//更新鞋子的条
+
+//更新鞋子的剩余条
 void MainScene::scheduleRestTime(float dt) 
 {
 	if (restTimeProgressTimer->getPercentage() == 0) {
@@ -159,6 +165,7 @@ void MainScene::scheduleRestTime(float dt)
 	}
 
 }
+
 //创建人物
 void MainScene::createPlayer() 
 {
@@ -188,6 +195,7 @@ void MainScene::createPlayer()
 	player->setPhysicsBody(playerBody);
 	this->addChild(player, 2);
 }
+
 //创建初始的地图
 void MainScene::initMap() { 
 	auto blockPos = Vec2(origin.x, origin.y + 200);
@@ -196,6 +204,7 @@ void MainScene::initMap() {
 	this->addChild(block);
 }
 
+//玩家吃到奖励物（鞋子）的处理函数
 void MainScene::contactShoe()
 {
 	jumpCount++;
@@ -203,6 +212,7 @@ void MainScene::contactShoe()
 	restTimeProgressTimer->setPercentage(100);
 }
 
+//玩家吃到奖励物（金币）的处理函数
 void MainScene::contactGold()
 {
 	Money += 5;
@@ -210,22 +220,26 @@ void MainScene::contactGold()
 	Music::getInstance()->playMusic(2);
 }
 
+//玩家吃到奖励物（药）的处理函数
 void MainScene::contactMedicine()
 {
 	double slowSpeed = -5;
 	changeSpeed(slowSpeed);
 }
 
+//重置鞋子的出现概率
 void MainScene::resetShoePosibilityRange(float dt)
 {
 	propsFactory::getInstance()->resetShoePosibilityRange();
 }
 
+//重置药出现的概率
 void MainScene::resetMedicinePosibilityRange(float dt)
 {
 	propsFactory::getInstance()->resetMedicinePosibilityRange();
 }
 
+//游戏终止的处理函数
 void MainScene::StopAction(float dt) 
 {
 	if (isStop) {
@@ -259,6 +273,7 @@ void MainScene::StopAction(float dt)
 	
 }
 
+//游戏场景的更新函数
 void MainScene::updateMap(float dt) 
 {
 	if (isStop) {
@@ -268,7 +283,8 @@ void MainScene::updateMap(float dt)
 	double	xVelocity = origin.x + visibleSize.width / 2 - player->getPosition().x,
 			yVelocity = player->getPhysicsBody()->getVelocity().y;
 	player->getPhysicsBody()->setVelocity(Vec2(xVelocity, yVelocity));
-
+	
+	// 设置超过最高分后记分板变红
 	if (Money > highScore) {
 		currentScore->setColor(Color3B::RED);
 	}
@@ -276,7 +292,8 @@ void MainScene::updateMap(float dt)
 	int rand = random() % 100;
 	int mode = 0;
 	int style1, style2;
-
+	
+	// 根据难度调节不同砖块出现的概率
 	switch (difficulty) {
 	case 0:
 		style1 = 30;
@@ -347,30 +364,35 @@ void MainScene::updateMap(float dt)
 		}
 		this->addChild(block);
 	}
-
+	
+	// 移除超出屏幕的奖励物品和砖块
 	propsFactory::getInstance()->removeIfOut();
 	BlockCreator::getInstance()->removeBlocksIfOut();
 }
 
+// 添加监听器
 void MainScene::addListener() 
 {
+	// 监听键盘输入
 	auto keyboardListener = EventListenerKeyboard::create();
 	keyboardListener->onKeyPressed = CC_CALLBACK_2(MainScene::onKeyPressed, this);
 	keyboardListener->onKeyReleased = CC_CALLBACK_2(MainScene::onKeyReleased, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(keyboardListener, this);
 
-
+	// 监听物理碰撞
 	auto contactListener = EventListenerPhysicsContact::create();
 	contactListener->onContactBegin = CC_CALLBACK_1(MainScene::onContactBegin, this);
 	contactListener->onContactSeparate = CC_CALLBACK_1(MainScene::onContactEnd, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
 }
 
+// 移除监听器
 void MainScene::removeListener() 
 {
 	_eventDispatcher->removeAllEventListeners();
 }
 
+// 设置爆炸效果的球形碰撞盒
 void MainScene::explosion(Vec2 pos, float radius) 
 {
 	auto explosion = Sprite::create();
@@ -386,6 +408,7 @@ void MainScene::explosion(Vec2 pos, float radius)
 	explosion->setPhysicsBody(explosionBody);
 }
 
+// 碰撞开始的检测函数
 bool MainScene::onContactBegin(PhysicsContact & contact) 
 {
 	auto node1 = contact.getShapeA()->getBody()->getNode(), 
@@ -402,7 +425,8 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	*/
 	auto Tag1 = node1->getTag(), 
 		Tag2 = node2->getTag();
-
+	
+	// player, explosion
 	if (pairMatch(Tag1, Tag2, ChickenTag, ExplosionTag)) {
 		if (Tag1 == 1) {
 			node1->removeFromParentAndCleanup(true);
@@ -458,8 +482,8 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 		scheduleOnce(schedule_selector(MainScene::resetShoePosibilityRange), 15.0f);
 		return false;
 	}
-	// player, medicine
 	
+	// player, medicine
 	if (pairMatch(Tag1, Tag2, ChickenTag, MedicineTag)) {
 		if (Tag1 == 1) {
 			propsFactory::getInstance()->removeProps((Sprite*)node2);
@@ -480,6 +504,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	
 }
 
+// 碰撞结束的检测函数
 bool MainScene::onContactEnd(PhysicsContact & contact) 
 {
 	auto node1 = contact.getShapeA()->getBody()->getNode(), 
@@ -507,13 +532,14 @@ bool MainScene::onContactEnd(PhysicsContact & contact)
 	}
 }
 
+// 碰撞物体配对检测
 bool MainScene::pairMatch(int a1, int a2, int b1, int b2) 
 {
 	return ((a1 == b1) && (a2 == b2)) 
 				|| ((a1 == b2) && (a2 == b1));
 }
 
-//
+// 键盘按下输入处理函数
 void MainScene::onKeyPressed(EventKeyboard::KeyCode code, Event* event) 
 {
 	double dx = player->getPhysicsBody()->getVelocity().x;
@@ -583,7 +609,7 @@ void MainScene::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 	}
 }
 
-// 释放按键
+// 键盘释放按键处理函数
 void MainScene::onKeyReleased(EventKeyboard::KeyCode code, Event* event) 
 {
 	double dy = player->getPhysicsBody()->getVelocity().y;
@@ -597,7 +623,7 @@ void MainScene::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 	}
 }
 
-// 更新显示
+// 更新记分板显示
 void MainScene::updateScoreLabel() 
 {
 	char str[20];
@@ -605,6 +631,7 @@ void MainScene::updateScoreLabel()
 	currentScore->setString(str);
 }
 
+// 更新最高分显示
 void MainScene::updateHighScoreLabel() 
 {
 	char str[20];
@@ -612,11 +639,13 @@ void MainScene::updateHighScoreLabel()
 	MostHigh->setString(str);
 }
 
+// 更新当前分数
 int MainScene::getCurrentScore() 
 {
 	return Money;
 }
 
+// 游戏提速，提高游戏难度
 void MainScene::speedUp(float dt) 
 {
 	if (!isStop) {
@@ -626,6 +655,7 @@ void MainScene::speedUp(float dt)
 	}
 }
 
+// 更改场景中的物品的移动速度
 void MainScene::changeSpeed(double multi) 
 {
 	BlockCreator::getInstance()->speedUp(multi);

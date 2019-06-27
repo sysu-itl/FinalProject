@@ -417,7 +417,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	if (pairMatch(Tag1, Tag2, ChickenTag, BlockTag)) {
 		int flag = 0;
 	
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			if (node1->getPosition().y >= node2->getPosition().y) {
 				flag = 1;
 			}
@@ -434,7 +434,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	// player, gold
 	if (pairMatch(Tag1, Tag2, ChickenTag, GoldTag)) {
 
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			propsFactory::getInstance()->removeProps((Sprite*)node2);
 			node2->removeFromParentAndCleanup(true);
 		}
@@ -447,7 +447,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	}
 	// player, shoe
 	if (pairMatch(Tag1, Tag2, ChickenTag, ShoeTag)) {
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			propsFactory::getInstance()->removeProps((Sprite*)node2);
 			node2->removeFromParentAndCleanup(true);
 		}
@@ -462,7 +462,7 @@ bool MainScene::onContactBegin(PhysicsContact & contact)
 	
 	// player, medicine
 	if (pairMatch(Tag1, Tag2, ChickenTag, MedicineTag)) {
-		if (Tag1 == 1) {
+		if (Tag1 == ChickenTag) {
 			propsFactory::getInstance()->removeProps((Sprite*)node2);
 			node2->removeFromParentAndCleanup(true);
 		}

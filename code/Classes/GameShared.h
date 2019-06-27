@@ -1,19 +1,19 @@
-#pragma once
+﻿#pragma once
 
 #ifndef gameShared_H
 #define gameShared_H
 
-
-#define DEBUG 1
 const double GameMaxSpeed = 400;
 const double GameMinSpeed = 150;
 const double SpeedChangeRate = 10;
 enum SpriteTag {
-	ChickenTag = 1,
-	BlockTag = 2,
+	ChickenTag = -1,
+	BlockTag = 0,
+	trapTag = 1,
 	GoldTag = 100,
 	ShoeTag = 101,
 	RocketTag = 102,
-	MedicineTag = 103
+	MedicineTag = 103,
+	ExplosionTag = 200
 };
 #endif // ! gameShared_H

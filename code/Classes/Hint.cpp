@@ -17,11 +17,13 @@ Hint* Hint::getInstance() {
 
 void Hint::RestartHint(Vec2& origin, Size& visibleSize, Layer* defaultLayer) {
 
+	//加载提示图片
 	Sprite* backphoto = Sprite::create("hint.png");
 	backphoto->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	backphoto->setScale(0.5f);
 	defaultLayer->addChild(backphoto, 2);
 
+	//加载中文字体
 	Dictionary* dic = Dictionary::createWithContentsOfFile("Chinese.xml");
 	String* strchinese1 = (String*)dic->valueForKey("restartTitle");
 	String* strchinese2 = (String*)dic->valueForKey("restart");
@@ -31,11 +33,13 @@ void Hint::RestartHint(Vec2& origin, Size& visibleSize, Layer* defaultLayer) {
 	std::string str2 = strchinese2->getCString();
 	std::string str3 = strchinese3->getCString();
 
+	//创建标题label
 	auto title = LabelTTF::create(str1, "Arial", 50);
 	title->setColor(Color3B(147, 68, 0));
 	title->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height / 2 + 50));
 	defaultLayer->addChild(title, 3);
 
+	//创建重新启动label
 	auto ttf_1 = LabelTTF::create(str2, "Arial", 40);
 	auto menuItem1 = MenuItemLabel::create(ttf_1, CC_CALLBACK_1(Hint::restartButtonCallback, this));
 	menuItem1->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height / 2 - 40));
@@ -44,6 +48,7 @@ void Hint::RestartHint(Vec2& origin, Size& visibleSize, Layer* defaultLayer) {
 	menu1->setPosition(Vec2::ZERO);
 	defaultLayer->addChild(menu1, 3);
 
+	//创建返回label
 	auto ttf_2 = LabelTTF::create(str3, "Arial", 25);
 	auto menuItem2 = MenuItemLabel::create(ttf_2, CC_CALLBACK_1(Hint::backMenuButtonCallback, this));
 	menuItem2->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height / 2 - 100));
@@ -53,6 +58,7 @@ void Hint::RestartHint(Vec2& origin, Size& visibleSize, Layer* defaultLayer) {
 	defaultLayer->addChild(menu2, 3);
 }
 
+//重新开始的响应函数
 void Hint::restartButtonCallback(Ref* sender) {
 	BlockCreator::getInstance()->clearBlock();
 	propsFactory::getInstance()->resetAll();
@@ -64,6 +70,7 @@ void Hint::restartButtonCallback(Ref* sender) {
 #endif
 }
 
+//返回的响应函数
 void Hint::backMenuButtonCallback(Ref * sender)
 {
 	BlockCreator::getInstance()->clearBlock();

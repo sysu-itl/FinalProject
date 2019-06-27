@@ -21,25 +21,30 @@ bool RuleScene::init()
 		return false;
 	}
 
+	//获取中文字体
 	Dictionary* dic = Dictionary::createWithContentsOfFile("Chinese.xml");
 
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
+	//加载背景图片
 	Sprite* background = Sprite::create("background.png");
 	background->setContentSize(visibleSize);
 	background->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(background, -1);
 
+	//加载提示背景图
 	Sprite* backphoto = Sprite::create("hint.png");
 	backphoto->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(backphoto, 1);
 
+	//加载鞋子图片
 	Sprite* shoephoto = Sprite::create("shoe.png");
 	shoephoto->setPosition(Vec2(visibleSize.width / 4, visibleSize.height * 3 / 4));
 	shoephoto->setScale(2);
 	this->addChild(shoephoto, 2);
 
+	//加载鞋子文字
 	String* strchinese2 = (String*)dic->valueForKey("shoes");
 	std::string str2 = strchinese2->getCString();
 	auto shoeText = Label::createWithSystemFont(str2, "Arial", 35);
@@ -47,11 +52,13 @@ bool RuleScene::init()
 	shoeText->setColor(Color3B(147, 68, 0));
 	this->addChild(shoeText, 2);
 
+	//加载金币图片
 	Sprite* moneyphoto = Sprite::create("gold.png");
 	moneyphoto->setPosition(Vec2(visibleSize.width / 4, visibleSize.height * 5 / 8));
 	moneyphoto->setScale(2);
 	this->addChild(moneyphoto, 2);
 
+	//加载金钱文字
 	String* strchinese3 = (String*)dic->valueForKey("money");
 	std::string str3 = strchinese3->getCString();
 	auto moneyText = Label::createWithSystemFont(str3, "Arial", 35);
@@ -59,13 +66,14 @@ bool RuleScene::init()
 	moneyText->setColor(Color3B(147, 68, 0));
 	this->addChild(moneyText, 2);
 
+	//加载进度条图片
 	Sprite* timephoto = Sprite::create("restTimeBar.png");
 	timephoto->setPosition(Vec2(visibleSize.width / 4, visibleSize.height * 1 / 2));
 	timephoto->setScale(0.1);
 	this->addChild(timephoto, 2);
 
 	
-
+	//加载时间文字
 	String* strchinese4 = (String*)dic->valueForKey("time");
 	std::string str4 = strchinese4->getCString();
 	auto timeText = Label::createWithSystemFont(str4, "Arial", 35);
@@ -73,11 +81,12 @@ bool RuleScene::init()
 	timeText->setColor(Color3B(147, 68, 0));
 	this->addChild(timeText, 2);
 
+	//加载药品图片
 	Sprite* medicinephoto = Sprite::create("medicine.png");
 	medicinephoto->setPosition(Vec2(visibleSize.width / 4, visibleSize.height * 3 / 8));
 	this->addChild(medicinephoto, 2);
 
-
+	//加载药品文字
 	String* strchinese5 = (String*)dic->valueForKey("medicine");
 	std::string str5 = strchinese5->getCString();
 	auto medicineText = Label::createWithSystemFont(str5, "Arial", 35);
@@ -85,7 +94,7 @@ bool RuleScene::init()
 	medicineText->setColor(Color3B(147, 68, 0));
 	this->addChild(medicineText, 2);
 
-
+	//加载描述字体
 	String* strchinese6 = (String*)dic->valueForKey("miaoshu");
 	std::string str6 = strchinese6->getCString();
 	auto howText = Label::createWithSystemFont(str6, "Arial", 35);
@@ -93,6 +102,7 @@ bool RuleScene::init()
 	howText->setColor(Color3B(147, 68, 0));
 	this->addChild(howText, 2);
 	
+	//加载返回文字
 	String* strchinese1 = (String*)dic->valueForKey("back");
 	std::string str1 = strchinese1->getCString();
 	auto ttf_1 = LabelTTF::create(str1, "Arial", 40);

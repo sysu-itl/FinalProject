@@ -29,8 +29,6 @@ public:
 
 	void removeListener();
 
-	void explosion(Vec2 pos, float radius);
-
 	bool onContactBegin(PhysicsContact & contact);
 
 	bool onContactEnd(PhysicsContact & contact);

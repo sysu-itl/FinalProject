@@ -50,12 +50,13 @@ void MapClass::saveMap(string filename)
 	}
 }
 
-void MapClass::loadMap(string filename)
+bool MapClass::loadMap(string filename)
 {
 	auto path = FileUtils::getInstance()->getWritablePath();
 	ifstream file(path + filename);
 
 	if (file) {
+		CCLOG("mapelement");
 		mapElement.clear();
 		while (!file.eof()) {
 			float x, y, w, h;
@@ -71,7 +72,10 @@ void MapClass::loadMap(string filename)
 			if (mapElement.size())
 				origin = mapElement.front()->getPosition();
 		}
+
+		return true;
 	}
+	return false;
 }
 
 void MapClass::push(Sprite * element)

@@ -15,7 +15,7 @@ public:
 
 	// 地图文件保存和加载
 	void saveMap(string filename);
-	void loadMap(string filename);
+	bool loadMap(string filename);
 
 	// 地图元素操作
 	void push(Sprite* element);

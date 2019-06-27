@@ -1,5 +1,5 @@
 ﻿#include "MapScene.h"
-
+#include "map.h"
 #include "math\MathUtil.h"
 #include "cocos2d.h"
 #include "MenuScene.h"
@@ -85,7 +85,7 @@ bool MapScene::init()
 	printLabel->setColor(Color3B::BLACK);
 	addChild(printLabel, 3);
 
-	print(to_string(visibleSize.width) + "  " + to_string(visibleSize.height));
+	print("Press M to open menu");
 }
 
 void MapScene::drawBackground()
@@ -221,7 +221,6 @@ bool MapScene::onTouchBegan(Touch * touch, Event * event)
 
 
 	touchLocation = localConvert(touchLocation);
-	print(to_string(touchLocation.x) + "  " + to_string(touchLocation.y));
 
 	if (state == DRAW_NONE || state == DRAW_READY) {
 		if (isInDrawLocal(touchLocation)) {
@@ -237,7 +236,6 @@ bool MapScene::onTouchBegan(Touch * touch, Event * event)
 			}
 			if (selElement != NULL) {
 				drawSprite = selElement;
-				print(to_string(selElement->getTag()));
 			}
 			else if (state == DRAW_READY) {
 				state = DRAW_ACTIVE;
@@ -260,7 +258,6 @@ bool MapScene::onTouchBegan(Touch * touch, Event * event)
 			}
 			if (selSprite != NULL && state == DRAW_NONE) {
 				state = DRAW_READY;
-				print("selIndex:" + to_string(selSprite->getTag()));
 			}
 		}
 	}
@@ -271,7 +268,6 @@ bool MapScene::onTouchBegan(Touch * touch, Event * event)
 
 bool MapScene::isInDrawLocal(const Point& loc)
 {
-	//Rect boardRect = Rect(origin.x, origin.y + visibleSize.height - board * 3, visibleSize.width, board * 3);
 	return loc.y >= 0 && loc.y <= visibleSize.height - board * 3;
 }
 
@@ -317,7 +313,6 @@ void MapScene::onTouchEnded(Touch * touch, Event * event)
 		if (drawSprite->getContentSize().width != 0 && drawSprite->getContentSize().height != 0) {
 			map.setPhysic(drawSprite);
 			map.push(drawSprite);
-			print("add");
 		}
 		state = DRAW_READY;
 
@@ -343,19 +338,21 @@ void MapScene::moveWin(const Point& translation)
 	testLabel->setPosition(testLabel->getPosition() - translation);
 	backLabel->setPosition(backLabel->getPosition() - translation);
 	clearLabel->setPosition(clearLabel->getPosition() - translation);
-
-	print(to_string(background->getPosition().x) + "  " + to_string(this->getPosition().x));
+	printLabel->setPosition(printLabel->getPosition() - translation);
 }
 
 void MapScene::loadMapButtonCallback()
 {
 	CCLOG("load");
-	for (const auto& element : map.mapElement) {
-		this->removeChild(element);
-	}
-	map.loadMap("map1");
-	for (const auto& element : map.mapElement) {
-		this->addChild(element);
+	auto temp = map.mapElement;
+	if (map.loadMap("map1")) {
+		for (auto element : temp) {
+			this->removeChild(element);
+		}
+		for (auto& element : map.mapElement) {
+
+			this->addChild(element);
+		}
 	}
 }
 
@@ -394,7 +391,6 @@ void MapScene::onKeyPressed(EventKeyboard::KeyCode code, Event * event)
 	case cocos2d::EventKeyboard::KeyCode::KEY_SPACE:
 		if (state == DRAW_READY) {
 			state = DRAW_MOVE;
-			print("state:  " + to_string(state));
 
 		}
 		break;
@@ -432,8 +428,6 @@ void MapScene::onKeyReleased(EventKeyboard::KeyCode code, Event * event)
 	case cocos2d::EventKeyboard::KeyCode::KEY_SPACE:
 		if (selSprite != NULL) {
 			state = DRAW_READY;
-			print("state:  " + to_string(state));
-
 		}
 		break;
 	}
@@ -487,6 +481,14 @@ void MapScene::testMenu()
 void MapScene::testInit()
 {
 	gameover = false;
+
+	//初始块
+	Sprite* firstBlock = map.createSprite(0);
+	firstBlock->setPosition(0, 192);
+	firstBlock->setTextureRect(Rect(0, 0, 512, 32));
+	map.setPhysic(firstBlock);
+	map.push(firstBlock);
+	addChild(firstBlock);
 
 	//调度器
 	schedule(schedule_selector(MapScene::update), 0.02f, kRepeatForever, 0.0f);
